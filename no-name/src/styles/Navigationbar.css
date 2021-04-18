@@ -1,0 +1,15 @@
+.NavBar ul {
+  color: lightgray;
+  list-style-type: none;
+  background-color: black;
+}
+
+.NavBar li {
+  display: inline;
+  padding: 10px;
+}
+
+.NavBar a {
+  color: white;
+  text-decoration: none;
+}
