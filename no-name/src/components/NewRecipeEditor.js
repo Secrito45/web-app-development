@@ -1,37 +1,61 @@
 import React, { useState } from 'react';
 
-const NewRecipeEditor = (recipes, setRecipes) => {
-  const [recipeMethod, setRecipeMethod] = useState('');
-  const [ingredients, setIngredients] = useState([ '', '', '' ]);
-  const [newRecipeName, setNewRecipeName] = useState('');
+const NewRecipeEditor = ({initial, headerLabel, handleAction, handleClose}) => {
+
+  let initMethode = undefined;
+  let initIngredients = undefined;
+  let initName = undefined;
+  let initId = undefined;
+  let initURL = undefined;
+
+  if (initial) {  
+    initMethode = initial.method;
+    initIngredients = initial.ingredients;
+    initName = initial.name;
+    initId = initial.id;
+    initURL = initial.url;
+  }
+
+  const [recipeMethod, setRecipeMethod] = useState(initMethode ? initMethode : '');
+  const [ingredients, setIngredients] = useState(initIngredients ? initIngredients : [ '', '', '' ]);
+  const [recipeName, setRecipeName] = useState(initName ? initName : '');
+  const [externalURL, setExternalURL] = useState(initURL ? initURL : '');
+  //const [useExternal, setUseExternal] = useState(false);
+
+  const dropEmptyFrom = (targeList) => {
+    let cleanedList = [];
+    
+    targeList.forEach(item => {
+      if (item !== '') {
+        cleanedList.push(item);
+      }  
+    });
+
+    return cleanedList;
+  };
 
   const addNewRecipe = event => {
     event.preventDefault();
 
-    const dropEmptyFrom = (targeList) => {
-      let cleanedList = [];
-      targeList.forEach(item => {
-        if (item !== '') {
-          cleanedList.push(item);
-        }  
-      });
-
-      return cleanedList;
-    };
+    if (recipeName === '') {
+      alert('Reseptillä täytyy olla nimi!');
+      return
+    }
 
     const newRecipeObject = {
-      id: recipes.length + 1 ,
-      url: undefined,
-      name: newRecipeName,
+      id: initId,
+      url: externalURL,
+      name: recipeName,
       method: recipeMethod,
       ingredients: dropEmptyFrom(ingredients)
     }
 
-    setRecipes(recipes.concat(newRecipeObject));
+    handleAction(newRecipeObject);
 
     setRecipeMethod('');
     setIngredients([ '', '', '' ]);
-    setNewRecipeName('');
+    setRecipeName('');
+    handleClose(newRecipeObject);
   };
 
   const handleFieldChange = event => {
@@ -42,9 +66,25 @@ const NewRecipeEditor = (recipes, setRecipes) => {
     ));
   };
 
-  const handleMethodChange = event => {
-    setRecipeMethod(event.target.value);
+
+  const handleChange = event => {
+    switch (event.target.name) {
+      case 'method':
+        setRecipeMethod(event.target.value);
+        break;
+
+      case 'name':
+        setRecipeName(event.target.value)
+        break;
+    
+      case 'url':
+        setExternalURL(event.target.value)
+        break;
+      default:
+        break;
+    }
   };
+
 
   const editIngredientFields = (option) => {
     if (option === 'add') {
@@ -54,20 +94,17 @@ const NewRecipeEditor = (recipes, setRecipes) => {
     }
   };
 
-  const handleRecipeNameChange = event => {
-    setNewRecipeName(event.target.value);
-  };
-
   return (
     <form onSubmit={addNewRecipe}>
-      <h3>Luo uusi resepti</h3>
+      <h3>{headerLabel}</h3>
 
-      Nimi uudelle reseptille <br />
-      <input value={newRecipeName}
-      onChange={handleRecipeNameChange} 
+      <p>Reseptin nimi</p>
+      <input value={recipeName}
+      name='name'
+      onChange={handleChange} 
       /> <br />
 
-      Raaka-aineet <br />
+    <p>Raaka-aineet</p>
       <button type='button' onClick={() => editIngredientFields('add')} >
         Lisää uusi kenttä
       </button>
@@ -85,13 +122,18 @@ const NewRecipeEditor = (recipes, setRecipes) => {
           /> <br />
         </div>
       )}
-
-      <br />
       
-      Valmistusohje <br />
+      <p>Valmistusohje</p>
       <textarea 
-      value={recipeMethod} 
-      onChange={handleMethodChange} 
+        value={recipeMethod}
+        name='method'
+        onChange={handleChange} 
+      /> <br />
+
+      <p>Lisää linkki ohjeenseen</p>
+      <input value={externalURL}
+      name='url'
+      onChange={handleChange} 
       /> <br /> <br />
       
       <button type='submit'>Tallenna</button>
