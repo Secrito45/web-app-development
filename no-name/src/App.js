@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 import NewRecipeEditor from './components/NewRecipeEditor';
 
 const RecipeItem = ({ item, handleClick }) => {
   const action = () => { 
-    console.log(item);
+    //console.log(item);
     handleClick(item);
   };
 
@@ -14,7 +15,7 @@ const RecipeItem = ({ item, handleClick }) => {
     </li>
   );
 };
-
+/* Component to render information from the selected recipe */
 const RecipeView = ({ item, handleAction, handleDelete}) => {
 
   //const ingredientList = item.ingredients;
@@ -112,26 +113,57 @@ const RecipeView = ({ item, handleAction, handleDelete}) => {
 
 
 const App = (props) => {
-  const [recipes, setRecipes] = useState(props.recipes);
+  const [recipes, setRecipes] = useState([]);
   const [createNew, setCreateNew] = useState(false);
   const [showRecipe, setShowRecipe] = useState(false);
   const [itemToShow, setItemToShow] = useState();
 
+  const baseURI = 'http://localhost:3001';
+
+  /* Componet effects */
+
+  useEffect(() => {
+    console.log('App Component Effect')
+    axios.get(baseURI + '/api/recipes')
+    .then(res => {
+      console.log('Promise fulfilled');
+      setRecipes(res.data);
+    });
+  }, []);
+
+  console.log('Render ' + recipes.length + ' recipes');
+
   /* Recipe editing related actions */
 
   const addNewRecipe = newRecipeObject => {
-    newRecipeObject = {...newRecipeObject, id: recipes.length + 1 };
-    setRecipes(recipes.concat(newRecipeObject));
+    //newRecipeObject = {...newRecipeObject, id: recipes.length + 1 };
+    console.log(newRecipeObject);
+    axios.post(baseURI + '/api/recipes', newRecipeObject)
+    .then(res => {
+      const newRecipe = res.data;
+      console.log(newRecipe);
+      setRecipes(recipes.concat(newRecipe));
+    });
   }
 
   const updateRecipe = newRecipeObject => {
     const id = newRecipeObject.id;
-    setRecipes(recipes.map(recipe => recipe.id !== id ? recipe : newRecipeObject));
+    axios.put(baseURI + '/api/recipes/' + id, newRecipeObject)
+    .then(res => {
+      console.log(res.data);
+      setRecipes(recipes.map(recipe =>
+        recipe.id !== id 
+        ? recipe 
+        : newRecipeObject));
+    });
   };
 
   const deleteRecipe = id => {
-    setRecipes(recipes.filter(r => r.id !== id));
-    setShowRecipe(false);
+    axios.delete(baseURI + '/api/recipes/' + id)
+    .then(result => {
+      setRecipes(recipes.filter(r => r.id !== id));
+      setShowRecipe(false);
+    });
   };
 
   // App's actions
@@ -170,7 +202,8 @@ const App = (props) => {
       />
     </div>
   );
-
+  
+  // List all available recipes
   return (
     <div>
       <h1>Reseptikirja</h1>

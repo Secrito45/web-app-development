@@ -2,24 +2,10 @@ import React, { useState } from 'react';
 
 const NewRecipeEditor = ({initial, headerLabel, handleAction, handleClose}) => {
 
-  let initMethode = undefined;
-  let initIngredients = undefined;
-  let initName = undefined;
-  let initId = undefined;
-  let initURL = undefined;
-
-  if (initial) {  
-    initMethode = initial.method;
-    initIngredients = initial.ingredients;
-    initName = initial.name;
-    initId = initial.id;
-    initURL = initial.url;
-  }
-
-  const [recipeMethod, setRecipeMethod] = useState(initMethode ? initMethode : '');
-  const [ingredients, setIngredients] = useState(initIngredients ? initIngredients : [ '', '', '' ]);
-  const [recipeName, setRecipeName] = useState(initName ? initName : '');
-  const [externalURL, setExternalURL] = useState(initURL ? initURL : '');
+  const [recipeMethod, setRecipeMethod] = useState(initial ? initial.method : '');
+  const [ingredients, setIngredients] = useState(initial && initial.ingredients ? initial.ingredients : [ '', '', '' ]);
+  const [recipeName, setRecipeName] = useState(initial ? initial.name : '');
+  const [externalURL, setExternalURL] = useState(initial ? initial.url: '');
   //const [useExternal, setUseExternal] = useState(false);
 
   const dropEmptyFrom = (targeList) => {
@@ -43,7 +29,7 @@ const NewRecipeEditor = ({initial, headerLabel, handleAction, handleClose}) => {
     }
 
     const newRecipeObject = {
-      id: initId,
+      id: initial ? initial.id : undefined,
       url: externalURL,
       name: recipeName,
       method: recipeMethod,
