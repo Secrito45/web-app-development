@@ -34,7 +34,7 @@ const errorHandler = (error, req, res, next) => {
 
 // Middleware assignements
 app.use(cors());
-//app.use(express.static('build')); Use with build frontEnd
+app.use(express.static('build')); //Use with build frontEnd
 app.use(express.json());
 // Optionally add requestlogger MW
 
