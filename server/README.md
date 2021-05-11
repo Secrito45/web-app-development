@@ -19,6 +19,15 @@ Täytyy asentaa palvelimeen cors niminen middleware. Tämä tapahtuu npm työkal
 
 Lisää tietoa corsista löytyy tästä linkistä: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 
+## Käyttäjän luominen ja bcrypt
+
+Asenna bcrypt komennolla `npm install bcrypt`
+
+## Async, Await ja Promiset
+
+!Async-Await rakenteella **voidaan korvata** .then kutsujen ketjuttamista.
+
+
 Lähteet
 1. https://www.pluralsight.com/blog/it-ops/linux-file-permissions
 2. https://www.howtogeek.com/50787/add-a-user-to-a-group-or-second-group-on-linux/
