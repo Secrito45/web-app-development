@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+import loginService from './services/login';
+import RecipeView from './components/RecipeView';
 import NewRecipeEditor from './components/NewRecipeEditor';
 
 const RecipeItem = ({ item, handleClick }) => {
@@ -15,130 +17,87 @@ const RecipeItem = ({ item, handleClick }) => {
     </li>
   );
 };
-/* Component to render information from the selected recipe */
-const RecipeView = ({ item, handleAction, handleDelete}) => {
-
-  //const ingredientList = item.ingredients;
-  //const urlToRecipe = item.url;
-  //const method = item.method;
-
-  const [activeItem, setActiveItem] = useState(item);
-  const [editRecipe, setEditRecipe] = useState(false);
-
-  const closeAndUpdate = updatedItem => {
-    setActiveItem(updatedItem);
-    setEditRecipe(false);
-  };
-
-  if (editRecipe) return (
-    <div>
-      <NewRecipeEditor 
-      initial={activeItem}
-      headerLabel='Reseptin muokkaus'
-      handleAction={handleAction}
-      handleClose={closeAndUpdate} />
-    </div>
-  );
-
-  console.log(activeItem.ingredients);
-  
-  // NOTE: works because if activeItem.ingredients eq false the AND operation
-  //       is not checked
-  if ( activeItem.ingredients && activeItem.ingredients.length > 0 ) return (
-    <div>
-      <h1>{activeItem.name}</h1>
-      <h2>Raaka-aineet</h2>
-      <ul>
-        {
-          activeItem.ingredients.map((ingredient, i) => 
-          <li key={i}>
-            {ingredient}
-          </li>
-        )}
-      </ul>
-      <h2>Valmistusohje</h2>
-      <p>
-        {activeItem.method}
-      </p>
-
-      <button onClick={ () => setEditRecipe(true) }>
-        Muokkaa
-      </button>
-      <button onClick={() => handleDelete(activeItem.id)}>
-        Poista resepti
-      </button>
-
-    </div>
-  );
-
-  if (activeItem.url) return (
-    <div>
-      <h1>{activeItem.name}</h1>
-      <h2>Linkki kolmannenosapuolen ohjeeseen</h2>
-      <a href={activeItem.url}> 
-        <p>Linkki ulkoiseen ohjeeseen</p>
-      </a>
-
-      <button onClick={ () => setEditRecipe(true) }>
-        Muokkaa
-      </button>
-      <button onClick={() => handleDelete(activeItem.id)}>
-        Poista resepti
-      </button>
-    
-    </div>
-  );
-
-  return (
-    <div>
-
-      <h1>{activeItem.name}</h1>
-      <h2>Raaka-aineet</h2>
-      <p>Ei saatavilla</p>
-      <h2>Valmistusohje</h2>
-      <p>Ei saatavilla</p>
-      <h2>Linkki kolmannenosapuolen ohjeeseen</h2>
-      <p> Ei saatavilla </p>
-
-      <button onClick={ () => setEditRecipe(true) }>
-        Muokkaa
-      </button>
-      <button onClick={() => handleDelete(activeItem.id)}>
-        Poista resepti
-      </button>
-
-    </div>
-  );
-};
-
 
 const App = (props) => {
-  const [recipes, setRecipes] = useState([]);
-  const [createNew, setCreateNew] = useState(false);
+  const [recipes, setRecipes]       = useState([]);
+  const [createNew, setCreateNew]   = useState(false);
   const [showRecipe, setShowRecipe] = useState(false);
   const [itemToShow, setItemToShow] = useState();
+  const [username, setUsername]     = useState('');
+  const [password, setPassword]     = useState('');
+  const [user, setUser]             = useState(null);
 
   const baseURI = 'http://localhost:3001';
 
   /* Componet effects */
 
+  // Load recipes from server
   useEffect(() => {
-    console.log('App Component Effect')
-    axios.get(baseURI + '/api/recipes')
+    console.log('App Component Effect');
+    if (user === null) {
+      console.log('No user logged in');
+      return
+    }
+
+    const config = {
+      headers: { Authorization: `bearer ${user.token}` },
+    };
+
+    axios.get(baseURI + '/api/recipes', config)
     .then(res => {
       console.log('Promise fulfilled');
       setRecipes(res.data);
+    })
+    .catch(error => {
+      console.error('Failed to retrieve recipes:', error.message);
     });
+  }, [user]);
+
+  useEffect(() => {
+    const userString = window.localStorage.getItem('loggedUser');
+    if (userString) {
+      const user = JSON.parse(userString);
+      //console.log('User in storage', user);
+      setUser(user);
+    }
   }, []);
 
   console.log('Render ' + recipes.length + ' recipes');
 
-  /* Recipe editing related actions */
+  /* Logging in related handlers */
 
+  const handleLogin = async event => {
+    event.preventDefault();
+
+    try {
+    const user = await loginService.login({
+      username, password
+    })
+
+    window.localStorage.setItem('loggedUser', JSON.stringify(user));
+    setUser(user);
+    setUsername('');
+    } catch (exception) {
+      console.log('Trying to login with', username, password);
+      alert('Wrong credentials');
+    }
+    setPassword('');
+  };
+
+  const handleLogout = () => {
+    window.localStorage.removeItem('loggedUser');
+    setUser(null);
+    setRecipes([]);
+  };
+
+  /* Recipe editing related actions */
   const addNewRecipe = newRecipeObject => {
-    //newRecipeObject = {...newRecipeObject, id: recipes.length + 1 };
+    const config = {
+      headers: { Authorization: `bearer ${user.token}` },
+    };
+
     console.log(newRecipeObject);
-    axios.post(baseURI + '/api/recipes', newRecipeObject)
+    axios.post(baseURI + '/api/recipes', newRecipeObject, config)
     .then(res => {
       const newRecipe = res.data;
       console.log(newRecipe);
@@ -147,8 +106,12 @@ const App = (props) => {
   }
 
   const updateRecipe = newRecipeObject => {
+    const config = {
+      headers: { Authorization: `bearer ${user.token}` },
+    };
+
     const id = newRecipeObject.id;
-    axios.put(baseURI + '/api/recipes/' + id, newRecipeObject)
+    axios.put(baseURI + '/api/recipes/' + id, newRecipeObject, config)
     .then(res => {
       console.log(res.data);
       setRecipes(recipes.map(recipe =>
@@ -173,6 +136,34 @@ const App = (props) => {
   };
 
   /* APP rendering */
+
+  if (user === null) return (
+    <div>
+      <h2>Kirjaudu sisään palveluun</h2>
+
+      <form onSubmit={handleLogin} >
+        <div>
+          Käyttäjä
+          <input 
+          type='text'
+          value={username}
+          name='username'
+          onChange={({ target }) => setUsername(target.value)}
+          />
+        </div>
+        <div>
+          Salasana
+          <input 
+          type='password'
+          value={password}
+          name='password'
+          onChange={({ target }) => setPassword(target.value)}
+          />
+        </div>
+        <button type='submit'>Kirjaudu sisään</button>
+      </form>
+    </div>
+  );
 
   // Display Recipe editor
   if (createNew) return (
@@ -217,6 +208,9 @@ const App = (props) => {
       <button onClick={ () => setCreateNew(true) }>
         Luo uusi resepti
       </button>
+      <br />
+      <br />
+      <button onClick={handleLogout} >Kirjaudu ulos</button>
     </div>
   );
 };
