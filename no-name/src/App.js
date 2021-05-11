@@ -27,8 +27,6 @@ const App = (props) => {
   const [password, setPassword]     = useState('');
   const [user, setUser]             = useState(null);
 
-  const baseURI = 'http://localhost:3001';
-
   /* Componet effects */
 
   // Load recipes from server
@@ -43,7 +41,7 @@ const App = (props) => {
       headers: { Authorization: `bearer ${user.token}` },
     };
 
-    axios.get(baseURI + '/api/recipes', config)
+    axios.get('/api/recipes', config)
     .then(res => {
       console.log('Promise fulfilled');
       setRecipes(res.data);
@@ -97,7 +95,7 @@ const App = (props) => {
     };
 
     console.log(newRecipeObject);
-    axios.post(baseURI + '/api/recipes', newRecipeObject, config)
+    axios.post('/api/recipes', newRecipeObject, config)
     .then(res => {
       const newRecipe = res.data;
       console.log(newRecipe);
@@ -111,7 +109,7 @@ const App = (props) => {
     };
 
     const id = newRecipeObject.id;
-    axios.put(baseURI + '/api/recipes/' + id, newRecipeObject, config)
+    axios.put('/api/recipes/' + id, newRecipeObject, config)
     .then(res => {
       console.log(res.data);
       setRecipes(recipes.map(recipe =>
@@ -122,7 +120,7 @@ const App = (props) => {
   };
 
   const deleteRecipe = id => {
-    axios.delete(baseURI + '/api/recipes/' + id)
+    axios.delete('/api/recipes/' + id)
     .then(result => {
       setRecipes(recipes.filter(r => r.id !== id));
       setShowRecipe(false);
