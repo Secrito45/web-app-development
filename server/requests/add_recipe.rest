@@ -1,0 +1,13 @@
+POST http://localhost:3001/api/recipes
+Content-Type: application/json
+
+{
+    "name": "Testi resepti",
+    "ingredients": [
+        "1. Ainesosa",
+        "2. Ainesosa",
+        "3. Ainesosa"
+    ],
+    "method": "Ruaan valmistusohje",
+    "url": ""
+}
